@@ -1,36 +1,41 @@
 #!/usr/bin/python3
 """
-Module documentation
-containig a lot
-of lines
+This module containts an api request
 """
 import json
 import requests
-from sys import argv
+import sys
 
-if __name__ == '__main__':
-    API_URL = 'https://jsonplaceholder.typicode.com'
 
-    user_id = argv[1]
-    response = \
-        requests.get(
-            f'{API_URL}/users/{user_id}/todos',
-            params={'_expand': 'user'}
-        )
+def gather_data_from_api():
+    """
+        This function gather data from an api
+    """
 
-    if response.status_code == 200:
-        data = response.json()
+    url_todo = 'https://jsonplaceholder.typicode.com/todos?userId='
+    url_name = 'https://jsonplaceholder.typicode.com/users?id='
+    response_todo = requests.get(url_todo + sys.argv[1])
+    response_name = requests.get(url_name + sys.argv[1])
 
-        dictionary = {user_id: []}
+    content_todo = list(response_todo.json())
+    content_name = list(response_name.json())
 
-        with open(f'{user_id}.json', 'w', encoding='utf-8') as f:
-            for task in data:
-                current_dict = {
-                    'task': task['title'],
-                    'completed': task['completed'],
-                    'username': task['user']['username']
-                }
-                dictionary[user_id].append(current_dict)
-            json.dump(dictionary, f)
-    else:
-        print(f"Error: {response.status_code}")
+    attributes = []
+    for elem in content_todo:
+        aux_dict = {}
+        aux_dict['task'] = elem['title']
+        aux_dict['completed'] = elem['completed']
+        aux_dict['username'] = content_name[0]['username']
+        attributes.append(aux_dict)
+
+    result = {}
+    result['{}'.format(sys.argv[1])] = attributes
+
+    jsonString = json.dumps(result)
+
+    with open('{}.json'.format(sys.argv[1]), 'w') as f:
+        f.write(jsonString)
+
+
+if __name__ == "__main__":
+    gather_data_from_api()

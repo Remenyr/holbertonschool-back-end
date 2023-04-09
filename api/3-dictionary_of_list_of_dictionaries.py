@@ -1,38 +1,43 @@
 #!/usr/bin/python3
 """
-Module documentation
-containig a lot
-of lines
+This module containts an api request
 """
 import json
 import requests
-from sys import argv
 
-if __name__ == '__main__':
-    API_URL = 'https://jsonplaceholder.typicode.com'
 
-    response = \
-        requests.get(
-            f'{API_URL}/todos',
-            params={'_expand': 'user'}
-        )
+def gather_data_from_api():
+    """
+        This function gather data from an api
+    """
 
-    if response.status_code == 200:
-        data = response.json()
+    url_todo = 'https://jsonplaceholder.typicode.com/todos'
+    url_users = 'https://jsonplaceholder.typicode.com/users'
+    response_todo = requests.get(url_todo)
+    response_users = requests.get(url_users)
 
-        dictionary = dict()
+    content_todo = list(response_todo.json())
+    content_users = list(response_users.json())
 
-        for task in data:
-            dictionary[task['userId']] = []
+    result = {}
+    for user in content_users:
 
-        with open('todo_all_employees.json', 'w', encoding='utf-8') as f:
-            for task in data:
-                current_dict = {
-                    'username': task['user']['username'],
-                    'task': task['title'],
-                    'completed': task['completed']
-                }
-                dictionary[task['userId']].append(current_dict)
-            json.dump(dictionary, f, indent=4)
-    else:
-        print(f"Error: {response.status_code}")
+        attributes = []
+        for elem in content_todo:
+            aux_dict = {}
+            aux_dict['username'] = user['username']
+            aux_dict['task'] = elem['title']
+            aux_dict['completed'] = elem['completed']
+
+            if user['id'] == elem['userId']:
+                attributes.append(aux_dict)
+
+        result[user['id']] = attributes
+
+    jsonString = json.dumps(result)
+    with open('todo_all_employees.json', 'w') as f:
+        f.write(jsonString)
+
+
+if __name__ == "__main__":
+    gather_data_from_api()

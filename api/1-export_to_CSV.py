@@ -1,37 +1,38 @@
 #!/usr/bin/python3
 """
-Module documentation
-containig a lot
-of lines
+This module containts an api request
 """
 import csv
 import requests
-from sys import argv
+import sys
 
-if __name__ == '__main__':
-    API_URL = 'https://jsonplaceholder.typicode.com'
 
-    user_id = argv[1]
-    response = \
-        requests.get(
-            f'{API_URL}/users/{user_id}/todos',
-            params={'_expand': 'user'}
-        )
+def gather_data_from_api():
+    """
+        This function gather data from an api
+    """
 
-    if response.status_code == 200:
-        data = response.json()
-        username = data[0]['user']['username']
+    url_todo = 'https://jsonplaceholder.typicode.com/todos?userId='
+    url_name = 'https://jsonplaceholder.typicode.com/users?id='
+    response_todo = requests.get(url_todo + sys.argv[1])
+    response_name = requests.get(url_name + sys.argv[1])
 
-        with open(f"{user_id}.csv", "w", encoding='utf-8', newline="") as file:
-            writer = csv.writer(file, quoting=csv.QUOTE_ALL)
-            for task in data:
-                writer.writerow(
-                    [
-                        f"{user_id}",
-                        f"{username}",
-                        f"{task['completed']}",
-                        f"{task['title']}"
-                    ]
-                )
-    else:
-        print(f"Error: {response.status_code}")
+    content_todo = list(response_todo.json())
+    content_name = list(response_name.json())
+
+    result = []
+    for elem in content_todo:
+        aux_list = []
+        aux_list.append(str(elem['userId']))
+        aux_list.append(str(content_name[0]['username']))
+        aux_list.append(str(elem['completed']))
+        aux_list.append(str(elem['title']))
+        result.append(aux_list)
+
+    with open('{}.csv'.format(sys.argv[1]), 'w') as f:
+        write = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC)
+        write.writerows(result)
+
+
+if __name__ == "__main__":
+    gather_data_from_api()
