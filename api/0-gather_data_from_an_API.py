@@ -1,40 +1,35 @@
 #!/usr/bin/python3
-"""
-Python script that, using a REST API, returns
-info about an employee todo list
-"""
-
+"""Script to use a REST API for a given employee ID, returns
+information about his/her TODO list progress"""
 import requests
-from sys import argv
+import sys
 
 
 if __name__ == "__main__":
-    """
-    For a given employee ID, returns information about
-    his/her todo list progress.
-    """
-    url = 'https://jsonplaceholder.typicode.com/users/' + argv[1]
-    response = requests.get(url)
+    if len(sys.argv) != 2:
+        print(f"UsageError: python3 {__file__} employee_id(int)")
+        sys.exit(1)
 
-    if response.status_code == 200:
-        content = response.json()
-        employee_name = content.get('name')
-        url = 'https://jsonplaceholder.typicode.com/users/' + \
-            argv[1] + '/todos'
+    API_URL = "https://jsonplaceholder.typicode.com"
+    EMPLOYEE_ID = sys.argv[1]
 
-        response = requests.get(url)
-        if response.status_code == 200:
-            content = response.json()
-            number_done_tasks = 0
-            tasks_title = []
+    response = requests.get(
+        f"{API_URL}/users/{EMPLOYEE_ID}/todos",
+        params={"_expand": "user"}
+    )
+    data = response.json()
 
-            for dic in content:
-                if dic['completed'] is True:
-                    number_done_tasks += 1
-                    tasks_title.append(dic['title'])
+    if not len(data):
+        print("RequestError:", 404)
+        sys.exit(1)
 
-            print("Employee {} is done with tasks({}/{}):".format(
-                employee_name,
-                number_done_tasks,
-                len(content)))
-            [print("\t {}".format(title)) for title in tasks_title]
+    employee_name = data[0]["user"]["name"]
+    total_tasks = len(data)
+    done_tasks = [task for task in data if task["completed"]]
+    total_done_tasks = len(done_tasks)
+
+    print(f"Employee {employee_name} is done with tasks"
+          f"({total_done_tasks}/{total_tasks}):")
+    for task in done_tasks:
+        print(f"\t {task['title']}")
+    
