@@ -1,42 +1,36 @@
 #!/usr/bin/python3
 """
-extend a Python script to export data
+Module documentation
+containig a lot
+of lines
 """
 import json
 import requests
 from sys import argv
 
+if __name__ == '__main__':
+    API_URL = 'https://jsonplaceholder.typicode.com'
 
-def export_json():
-    """ function that saves data into a JSON file """
-    url = 'https://jsonplaceholder.typicode.com/users/' + argv[1]
-    response = requests.get(url)
+    user_id = argv[1]
+    response = \
+        requests.get(
+            f'{API_URL}/users/{user_id}/todos',
+            params={'_expand': 'user'}
+        )
 
     if response.status_code == 200:
-        content = response.json()
-        employee_name = content.get('username')
-        employee_id = argv[1]
-        url = 'https://jsonplaceholder.typicode.com/users/' + \
-            argv[1] + '/todos'
+        data = response.json()
 
-        response = requests.get(url)
-        if response.status_code == 200:
-            content = response.json()
-            filename = argv[1] + '.json'
-            tasks_list = []
+        dictionary = {user_id: []}
 
-            for task in content:
-                list_ = {
+        with open(f'{user_id}.json', 'w', encoding='utf-8') as f:
+            for task in data:
+                current_dict = {
                     'task': task['title'],
                     'completed': task['completed'],
-                    'username': employee_name}
-                tasks_list.append(list_)
-
-            with open(filename, 'w') as file:
-                json_dict = json.dumps({'{}'.format(employee_id): tasks_list})
-                file.write(json_dict)
-
-
-if __name__ == "__main__":
-    """ executing function """
-    export_json()
+                    'username': task['user']['username']
+                }
+                dictionary[user_id].append(current_dict)
+            json.dump(dictionary, f)
+    else:
+        print(f"Error: {response.status_code}")

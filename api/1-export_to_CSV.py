@@ -1,36 +1,37 @@
 #!/usr/bin/python3
 """
-extend your Python script to export data
+Module documentation
+containig a lot
+of lines
 """
+import csv
 import requests
 from sys import argv
 
+if __name__ == '__main__':
+    API_URL = 'https://jsonplaceholder.typicode.com'
 
-def export_csv():
-    """ function that saves data into a csv file """
-    url = 'https://jsonplaceholder.typicode.com/users/' + argv[1]
-    response = requests.get(url)
+    user_id = argv[1]
+    response = \
+        requests.get(
+            f'{API_URL}/users/{user_id}/todos',
+            params={'_expand': 'user'}
+        )
 
     if response.status_code == 200:
-        content = response.json()
-        employee_name = content.get('username')
-        employee_id = argv[1]
-        url = 'https://jsonplaceholder.typicode.com/users/' + \
-            argv[1] + '/todos'
+        data = response.json()
+        username = data[0]['user']['username']
 
-        response = requests.get(url)
-        if response.status_code == 200:
-            content = response.json()
-            filename = argv[1] + '.csv'
-            print(employee_name, employee_id)
-
-            with open(filename, 'w') as file:
-                for dic in content:
-                    file.write('"{}","{}","{}","{}"\n'.format(
-                        employee_id, employee_name,
-                        dic['completed'], dic['title']))
-
-
-if __name__ == "__main__":
-    """ executing function """
-    export_csv()
+        with open(f"{user_id}.csv", "w", encoding='utf-8', newline="") as file:
+            writer = csv.writer(file, quoting=csv.QUOTE_ALL)
+            for task in data:
+                writer.writerow(
+                    [
+                        f"{user_id}",
+                        f"{username}",
+                        f"{task['completed']}",
+                        f"{task['title']}"
+                    ]
+                )
+    else:
+        print(f"Error: {response.status_code}")
